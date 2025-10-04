@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Processed Abacus</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- popup prompt removed -->
+  <div class="stage">
+    <!-- Clear button stacked above the header with scale controls -->
+    <div class="clear-container">
+      <button id="clear-btn" type="button" class="btn" title="Clear selections" aria-label="Clear selections">CLEAR</button>
+      <div class="count-frame" aria-live="polite" role="status">
+        <span class="count-text">Processed: 0</span>
+      </div>
+  <!-- install button for PWA; hidden until beforeinstallprompt fires -->
+  <button id="install-btn" class="btn install-btn" style="display:none;">Install</button>
+    </div>
+
+    <header class="header-frame">
+      <!-- Results of user selection -->
+      <div class="header-content">
+        <div class="result-area">No selections</div>
+      </div>
+    </header>
+
+    <div class="grid-container" id="grid"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "abacus-pwa-tools",
+  "version": "1.0.0",
+  "description": "Helper scripts for generating PWA icons",
+  "scripts": {
+    "gen-icons": "node tools/generate-icons.js"
+  },
+  "dependencies": {
+    "sharp": "^0.32.0"
+  }
+}

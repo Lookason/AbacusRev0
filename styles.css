@@ -1,0 +1,404 @@
+/* AbacusRev0 styles */
+
+/* Page: center the square grid in the viewport */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  /* make the page background light gray */
+  background-color: rgba(248, 243, 243, 0.942);
+  display: flex;
+  justify-content: center;
+  /* pin content to the top so small overflows don't clip the top element (clear button) */
+  align-items: flex-start;
+  /* restore no-scroll but keep small top/bottom padding for breathing room */
+  overflow: hidden;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+/* Prevent layout collapsing by enforcing a minimum viewport height for the page.
+   This cannot stop users resizing their browser, but it ensures the page will
+   show scrollbars rather than compress below the min height. Adjust as needed. */
+html, body { min-height: 480px; }
+
+/* Fixed 5x5 responsive square grid */
+.grid-container {
+  display: grid;
+  /* Always 5 columns and 5 rows */
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  /* keep circle edges responsive; cap maximum gap at 8px */
+  gap: clamp(2px, 0.8vmin, 8px);
+  /* slightly reduced padding so the border-to-circle distance looks balanced */
+  /* tightened to reclaim vertical space on small viewports */
+  padding: clamp(4px, 1.2vmin, 12px);
+
+  /* Make the grid a square that fits both the stage width and the available viewport height.
+    Use a JS-updated CSS variable --available-grid-size to precisely cap the grid so the page
+    doesn't need to scroll. A calc() fallback is provided. */
+  width: min(var(--stage-w), var(--available-grid-size, calc(100vh - 160px)));
+  max-width: var(--stage-w);
+  aspect-ratio: 1 / 1;
+  box-sizing: border-box;
+
+ 
+  /* make the border more visible and robust on small viewports */
+  border: 1px solid rgba(0,0,0,0.85);
+  border-radius: 12px;
+  background-clip: padding-box; /* keep background from painting over the border */
+  box-shadow: 0 8px 22px rgba(0,0,0,0.06);
+  overflow: visible; /* ensure drop-shadow and border remain visible */
+
+  /* Center grid content inside page */
+  align-content: center;
+  justify-content: center;
+}
+
+/* Header frame: responsive, rounded corners */
+
+.header-frame {
+  /* match the stage width so the header edges align exactly with the grid */
+  width: 100%;
+  max-width: var(--stage-w);
+  margin: 0; /* stage controls spacing */
+  /* tightened header padding to help the whole stage fit inside the viewport */
+  padding: clamp(6px, 0.9vw, 12px);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(250,250,250,0.9));
+  /* default header frame border (always black) */
+  border: 1px solid #000;
+  transition: border-color 200ms ease, border-width 200ms ease, box-shadow 200ms ease;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+  box-sizing: border-box;
+}
+
+/* when selections exist, highlight the header with a thicker red frame */
+.header-frame.has-selection {
+  /* keep border visually black even when selected; increase width for emphasis */
+  border-color: #000;
+  border-width: 3px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+  /* keep the continuous glow removed; a one-shot pulse is handled by .glow-once */
+}
+
+/* one-shot glow: plays the glow animation once when .glow-once is added */
+.header-frame.glow-once {
+  animation: glow-pulse 900ms cubic-bezier(.25,.1,.25,1) 1 both;
+}
+
+/* pulse a soft gray glow around the header when active */
+@keyframes glow-pulse {
+  from {
+    box-shadow: 0 12px 30px rgba(0,0,0,0.12), 0 0 0 0 rgba(120,120,120,0.06);
+  }
+  to {
+    box-shadow: 0 18px 46px rgba(0,0,0,0.14), 0 0 48px 14px rgba(120,120,120,0.18);
+  }
+}
+
+.header-content {
+  font-size: clamp(1rem, 2.8vmin, 1.6rem);
+  color: #111;
+  font-weight: 700;
+  text-align: center;
+}
+
+
+/* header controls */
+.btn {
+  background: white;
+  border: 1px solid rgba(0,0,0,0.08);
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-transform: none;
+}
+
+/* Clear container outside the header frame */
+/* remove .clear-container — button moved inside header-frame */
+
+.result-area {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #111;
+  /* Keep the pressed area on a single line; JS will shrink font to make content fit */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1;
+  /* Keep same font size as circle numbers as a fallback */
+  /* responsive font: allow smaller minimum and a stronger viewport scaling */
+  font-size: clamp(0.7rem, 5vmin, 2.4rem);
+  transition: font-size 140ms ease;
+  overflow-wrap: normal;
+}
+
+/* inner text element so ellipsis works reliably inside the flex container */
+.result-area .pressed-text {
+  display: block;
+  width: 100%;
+  min-width: 0; /* allow shrinking inside flex */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* copy feedback */
+.result-area { cursor: pointer; position: relative; }
+
+/* small accessible tooltip that appears when content is copied */
+.result-area .copy-tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px); /* place above the pressed-area */
+  transform: translateX(-50%) translateY(6px);
+  background: rgba(0,0,0,0.88);
+  color: #fff;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: opacity 120ms ease, transform 160ms cubic-bezier(.2,0,0,1);
+  z-index: 30;
+}
+.result-area .copy-tooltip.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+
+
+/* warning style for when there's nothing to copy */
+.result-area .copy-tooltip.warning {
+  background: rgba(220,60,60,0.94);
+}
+
+/* header-row places header and clear button on the same level */
+
+/* Stage: wraps header and grid so the header can be positioned on top */
+.stage {
+  /* stack header above the grid; header will not overlay */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* expose the centered stage width as a CSS variable so other rules can align to it */
+  --stage-w: min(92vw, 75vh, 1200px);
+  width: var(--stage-w);
+  box-sizing: border-box;
+  /* tightened stage gap to reduce surrounding whitespace so everything fits without scrolling */
+  gap: clamp(4px, 0.9vh, 10px);
+  /* allow absolutely positioned label inside stage if needed */
+  position: relative;
+}
+
+/* responsive circle scaling: set a CSS variable on the stage and use it to scale circles visually
+   without changing the grid cell geometry (keeps layout stable). */
+.stage { --circle-scale: 1; }
+
+
+
+/* Header positioning in normal flow so it doesn't block the grid */
+.header-frame {
+  position: relative;
+  /* use flex so the header naturally takes available space beside the clear button */
+  flex: 1 1 auto;
+  min-width: 0; /* allow flex children to shrink properly */
+  margin: 0; /* controlled by .stage gap */
+  /* ensure symmetric 2px padding around the header/frame */
+  padding: 2px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* center content horizontally */
+  gap: 12px;
+}
+
+/* Sticky CLEAR button in top-right of viewport */
+/* Position the clear button (inside .clear-container) to the right of the centered header/frame
+   It uses calc() to place itself just outside the centered stage/header regardless of viewport size. */
+.clear-container .btn {
+  background: #c62828; /* red */
+  color: #fff;
+  font-weight: 800;
+  border: 1px solid #9e9e9e; /* make border gray */
+  /* reduced padding so the button fits tightly within the header */
+  padding: 6px 10px;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  cursor: pointer;
+  width: auto;
+  max-width: min(var(--stage-w), 100%);
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem; /* larger button font */
+}
+
+/* Keep CLEAR prominent */
+
+/* Stack the clear button above the header inside the stage and center it */
+  .clear-container {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: flex-start; /* align left edge with header-frame */
+    gap: 10px;
+    margin-bottom: 6px; /* tightened so the header+button fits vertically */
+    flex-wrap: nowrap; /* keep controls on a single line */
+  }
+
+.clear-container .btn { pointer-events: auto; }
+
+/* ensure the clear button stays comfortably tall */
+.clear-container .btn {
+  min-height: 44px;
+}
+
+/* styled tooltip for clear button (pure CSS using pseudo-element) */
+/* using native browser tooltip (title attribute) for Clear button */
+
+/* Responsive fallback: on very small screens place the clear button inline in the flow
+   so it never overlaps the centered header. */
+@media (max-width: 420px) {
+  .header-frame { width: 100% !important; }
+  .clear-container { width: 100%; display:flex; justify-content: center; }
+  .clear-container .btn { box-shadow: none; }
+  .stage { width: 100%; --stage-w: 100vw; }
+
+  /* Reduce grid and circle sizes on narrow screens so the 5x5 grid fits comfortably */
+  .grid-container {
+    width: calc(100% - 24px);
+    gap: clamp(1.5px, 1.6vmin, 8px);
+    padding: clamp(6px, 3vw, 12px);
+  }
+
+  .circle {
+    border-width: 1px;
+  }
+
+  .circle-text,
+  .circle.active .circle-text {
+    /* scale the label down on small screens */
+    font-size: clamp(0.9rem, 4vmin, 1.6rem);
+  }
+
+  .result-area {
+    /* small-screen override: permit smaller font and stronger vmin scaling */
+    font-size: clamp(0.75rem, 5vmin, 1.6rem);
+  }
+}
+
+/* Also guard very short viewports (e.g. small window height) by scaling down visuals */
+@media (max-height: 520px) {
+  .grid-container {
+    width: min(80vw, 80vh);
+    gap: clamp(1.5px, 1.8vmin, 8px);
+    padding: clamp(6px, 2vh, 10px);
+  }
+
+  .circle-text,
+  .circle.active .circle-text {
+    font-size: clamp(0.9rem, 3.5vmin, 1.4rem);
+  }
+
+  .result-area { font-size: clamp(0.75rem, 4.5vmin, 1.4rem); }
+}
+
+/* ensure the button doesn't get extra spacing from header rules */
+/* removed .header-frame > .btn rule: no direct .btn child of .header-frame in current markup */
+
+/* Each grid cell is square because the container is square and rows/cols are equal fractions. */
+.circle {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  /* default: light gray */
+  background-color: lightgray;
+  box-sizing: border-box;
+  border: 1px solid #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* apply the stage-level circle scale variable */
+  transform: scale(var(--circle-scale));
+  transition: transform 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+  cursor: pointer;
+}
+
+/* Hover scale only when not active */
+.circle:not(.active):hover { transform: scale(calc(var(--circle-scale) * 1.05)); }
+
+/* Circle text always black (including when active) */
+.circle-text,
+.circle.active .circle-text {
+  color: black;
+  font-weight: 700;
+  /* Larger but balanced: scale with the smaller viewport dimension (vmin) */
+  font-size: clamp(1.2rem, 6vmin, 3rem);
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Active state: change color only (no scaling) */
+.circle.active {
+  background-color: lime;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+  /* keep the base scale but avoid hover/enlarge effects */
+  transform: scale(var(--circle-scale));
+}
+
+/* scale down circles as viewport narrows */
+@media (max-width: 900px) {
+  .stage { --circle-scale: 0.92; }
+}
+@media (max-width: 700px) {
+  .stage { --circle-scale: 0.82; }
+}
+@media (max-width: 420px) {
+  .stage { --circle-scale: 0.68; }
+}
+
+
+
+
+  /* Narrow count frame under the grid showing how many circles are pressed */
+  .count-frame {
+    box-sizing: border-box;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: transparent;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #111;
+    /* doubled font size for greater visibility */
+    font-size: clamp(1.6rem, 4.8vmin, 2rem);
+  }
+  .count-text { pointer-events: none; margin-left: 6px; }
+
+  /* small install button shown when PWA install is available */
+  .install-btn {
+    background: #9e9e9e; /* solid gray */
+    color: #111;
+    font-weight: 700;
+    border: 8px solid rgba(0,0,0,0.16);
+    padding: 6px 8px;
+    border-radius: 6px;
+    min-height: 36px;
+    margin-left: auto; /* push to the right edge */
+  }
+
+
+
